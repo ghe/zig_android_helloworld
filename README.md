@@ -26,8 +26,7 @@ This project showcases how to build a fully functional Android app using Zig for
 │   ├── main.zig              # JNI entry point and app initialization
 │   ├── app.zig               # Core application logic
 │   ├── ui.zig                # UI creation and management via JNI
-│   ├── ui.xml                # Layout definition
-│   └── getauxval_stub.c      # Android compatibility stub
+│   └── ui.xml                # Layout definition
 ├── android/
 │   ├── MainActivity.java     # Minimal Java activity (passthrough)
 │   └── Manifest.xml          # Android app manifest
@@ -173,7 +172,7 @@ adb logcat -s ZigHelloWorld
 
 4. **Memory Safety Preserved**: Maintains Zig's memory safety guarantees in Android environment
 
-5. **Custom libc Integration**: Solved Android-specific libc compatibility issues while preserving stack protection
+5. **Proper Android NDK Integration**: Resolved Android-specific libc compatibility through correct API level targeting
 
 ## Performance Benefits
 
@@ -193,10 +192,10 @@ adb logcat -s ZigHelloWorld
 
 ## Lessons Learned
 
-1. **Android NDK Integration**: Proper libc configuration is critical for cross-compilation success
+1. **Android NDK Integration**: Proper libc configuration and API level matching is critical for cross-compilation success
 2. **JNI Complexity**: Direct JNI usage requires careful memory management and error handling  
 3. **Build System Benefits**: Custom build systems provide better control and understanding
-4. **Compatibility Layers**: Sometimes small compatibility shims (like getauxval_stub.c) are necessary
+4. **API Level Importance**: Matching target API level with device API level eliminates compatibility issues
 5. **Debugging Strategy**: Comprehensive logging at each layer aids troubleshooting
 
 This project demonstrates that Zig can be successfully used as the primary language for Android development, providing memory safety, performance benefits, and a more direct development experience than traditional Java/Kotlin approaches.
