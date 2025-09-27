@@ -162,6 +162,49 @@ adb shell am start -n com.zig.helloworld/.MainActivity
 adb logcat -s ZigHelloWorld
 ```
 
+### Expected vs Observed Device Test Results
+
+**Installation Output:**
+```
+Serving...
+Performing Incremental Install
+Success
+Install command complete in ~500ms
+All files should be loaded. Notifying the device.
+```
+
+**Application Launch and Logs:**
+```bash
+# Command: adb shell am start -n com.zig.helloworld/.MainActivity && adb logcat -s ZigHelloWorld
+
+Starting: Intent { cmp=com.zig.helloworld/.MainActivity }
+
+# Expected log sequence - all steps should complete successfully:
+D ZigHelloWorld: Static block: About to load native library
+D ZigHelloWorld: Static block: Native library loaded successfully  
+D ZigHelloWorld: onCreate: Starting
+D ZigHelloWorld: onCreate: About to call initializeFromNative
+I ZigHelloWorld: initializeFromNative called!
+I ZigHelloWorld: Creating TextView with JNI...
+I ZigHelloWorld: setContentView called successfully
+I ZigHelloWorld: TextView created and set!
+I ZigHelloWorld: UI setup complete!
+D ZigHelloWorld: onCreate: initializeFromNative returned successfully
+D ZigHelloWorld: onCreate: Complete
+```
+
+**Success Indicators:**
+- ✅ Native library loads without `UnsatisfiedLinkError`
+- ✅ JNI calls execute successfully 
+- ✅ UI components created dynamically from Zig code
+- ✅ Android logging works from native Zig functions
+- ✅ Complete execution flow from Java → Zig → Android APIs → UI
+
+**Tested Device Configuration:**
+- Android API Level: 35 (Android 15)
+- Architecture: ARM64 (aarch64)
+- Build Target: aarch64-linux-android with API 35 libraries
+
 ## Key Innovations
 
 1. **Complete Zig Build System**: Entire APK compilation pipeline implemented in Zig, eliminating Gradle dependency
