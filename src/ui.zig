@@ -47,36 +47,14 @@ pub fn setContentView(env: *c.JNIEnv, activity: c.jobject, layout: Layout) !void
     // Create TextView using object-oriented interface
     const textView = try jniWrapper.createTextView(methods, activity);
 
-    // Log the actual text being displayed
-    l.info("Setting TextView text:");
-    // Convert to null-terminated string for logging
-    const null_term_text = std.heap.c_allocator.dupeZ(u8, layout.text) catch "Failed to allocate for logging";
-    defer if (!std.mem.eql(u8, null_term_text, "Failed to allocate for logging")) std.heap.c_allocator.free(null_term_text);
-    l.info(null_term_text);
-
     try textView.setText(layout.text);
-    l.info("TextView text set successfully");
-
     textView.setTextSize(24.0);
-    l.info("TextView text size set to 24.0");
+    textView.setGravity(17); // Center the text
+    textView.setTextColor(-16777216); // Black text for API 35 compatibility
 
-    // Set layout parameters: MATCH_PARENT width, WRAP_CONTENT height
-    try textView.setLayoutParams(-1, -2);
-    l.info("TextView layout parameters set");
-
-    // Center the text (Gravity.CENTER = 17)
-    textView.setGravity(17);
-    l.info("TextView gravity set to center");
-
-    // Set explicit black text color (-16777216 is 0xFF000000 as signed i32)
-    textView.setTextColor(-16777216);
-    l.info("TextView text color set to black");
-
-    // Set content view using object-oriented interface
-    l.info("About to call setContentView");
+    // Set content view
     const activityWrapper = jniWrapper.createActivity(methods, activity);
     activityWrapper.setContentView(&textView);
-    l.info("setContentView called successfully");
 
     l.info("TextView created and set!");
 }

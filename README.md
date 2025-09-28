@@ -105,14 +105,48 @@ lib.addLibraryPath(.{ .cwd_relative = api_35_lib_path });
 lib.linkSystemLibrary("c"); // Now properly resolves getauxval from Android libc
 ```
 
-### Challenge 3: JNI Header Discovery
+### Challenge 3: Java Compilation and API Level Modernization (RESOLVED)
+**Problem**: When updating to modern Android development requirements:
+1. Java compilation warnings: "source value 8 is obsolete"
+2. App compatibility warning: "This app is developed for an old Android version"
+3. Text display broken after API updates - UI showed only title, no content text
+
+**Root Cause**:
+- Java compilation targeting obsolete version 8
+- Android API targeting too low (API 24) for modern devices (API 35)
+- Android API 35 changed default text color behavior in Material Light theme, making text invisible
+
+**Solution**:
+- **Java**: Updated from Java 8 to Java 11 compilation with `-Xlint:-options` to suppress obsolete warnings
+- **Android SDK**: Updated from API 24 to API 35 targeting with Build Tools 35.0.0
+- **Manifest**: Added `<uses-sdk android:targetSdkVersion="35" android:minSdkVersion="26" />`
+- **Text Color Fix**: Added explicit black text color for API 35 Material Light theme compatibility
+
+```zig
+// Java compilation update in build.zig
+"-Xlint:-options",
+"-source", "11",
+"-target", "11",
+
+// API level updates
+.api_level = 35,
+.min_sdk = 26,
+.target_sdk = 35,
+
+// API 35 text color fix in ui.zig
+textView.setTextColor(-16777216); // Black text for API 35 compatibility
+```
+
+This resolved compilation warnings, eliminated compatibility warnings, and restored text visibility while maintaining modern Android targeting.
+
+### Challenge 4: JNI Header Discovery
 **Problem**: Zig's C import system couldn't find Android's `jni.h` headers during compilation.
 
 **Solution**:
 - Added Android NDK include directories to build configuration
 - Used `lib.addIncludePath()` to expose JNI headers to `@cImport`
 
-### Challenge 4: JNI Function Pointer Syntax (ABSTRACTED)
+### Challenge 5: JNI Function Pointer Syntax (ABSTRACTED)
 **Problem**: Zig's JNI function call syntax was verbose and error-prone:
 ```zig
 // Raw JNI calls were cumbersome:
@@ -139,7 +173,7 @@ logger.info("TextView created successfully");
 logger.err("Failed to initialize");
 ```
 
-### Challenge 5: Dynamic UI Creation
+### Challenge 6: Dynamic UI Creation
 **Problem**: Creating Android UI components entirely from Zig without XML inflation.
 
 **Solution**:
@@ -150,9 +184,9 @@ logger.err("Failed to initialize");
 ## Build Requirements
 
 - Zig (latest)
-- Android SDK (API 24+)
+- Android SDK (API 35+ with Build Tools 35.0.0)
 - Android NDK (r25+)
-- Java 8+
+- Java 11+
 - Android device or emulator
 
 ## Environment Setup
