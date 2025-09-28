@@ -38,11 +38,14 @@ pub fn build(b: *std.Build) void {
     };
     const resolved_target = b.resolveTargetQuery(target_query);
 
-    const lib = b.addSharedLibrary(.{
+    const lib = b.addLibrary(.{
         .name = "helloworld",
-        .root_source_file = b.path("src/main.zig"),
-        .target = resolved_target,
-        .optimize = optimize,
+        .linkage = .dynamic,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = resolved_target,
+            .optimize = optimize,
+        }),
     });
 
     // Use custom Android libc configuration

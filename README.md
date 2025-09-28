@@ -26,6 +26,8 @@ This project showcases how to build a fully functional Android app using Zig for
 │   ├── main.zig              # JNI entry point and app initialization
 │   ├── app.zig               # Core application logic
 │   ├── ui.zig                # UI creation and management via JNI
+│   ├── jni.zig               # JNI wrapper abstraction with object-oriented interface
+│   ├── log.zig               # Android logging abstraction
 │   └── ui.xml                # Layout definition
 ├── android/
 │   ├── MainActivity.java     # Minimal Java activity (passthrough)
@@ -48,6 +50,8 @@ This project showcases how to build a fully functional Android app using Zig for
 - **main.zig**: JNI entry point that receives calls from Java
 - **app.zig**: Application initialization and state management
 - **ui.zig**: Dynamic UI creation using Android JNI APIs
+- **jni.zig**: Object-oriented JNI wrapper with method caching and error handling
+- **log.zig**: Clean Android logging abstraction with multiple log levels
 - **ui.xml**: Layout definitions read by Zig code
 
 ### 3. Java Layer (`android/`)
@@ -101,16 +105,32 @@ lib.linkSystemLibrary("c"); // Now properly resolves getauxval from Android libc
 - Added Android NDK include directories to build configuration
 - Used `lib.addIncludePath()` to expose JNI headers to `@cImport`
 
-### Challenge 4: JNI Function Pointer Syntax
-**Problem**: Zig's JNI function call syntax required double pointer dereferencing:
+### Challenge 4: JNI Function Pointer Syntax (ABSTRACTED)
+**Problem**: Zig's JNI function call syntax was verbose and error-prone:
 ```zig
-// Wrong: env.*.FindClass.?() 
-// Right: env.*.*.FindClass.?()
+// Raw JNI calls were cumbersome:
+env.*.*.FindClass.?(env, "android/widget/TextView")
+env.*.*.CallVoidMethod.?(env, textView, setText, javaText)
+c.__android_log_print(c.ANDROID_LOG_INFO, "ZigHelloWorld", "message")
 ```
 
 **Solution**:
-- Updated all JNI calls to use proper double dereferencing syntax
-- Added comprehensive error checking and Android logging
+- **Created JNI wrapper abstraction** (`src/jni.zig`) with object-oriented interface
+- **Added logging abstraction** (`src/log.zig`) for clean Android logging
+- **Implemented method caching** for efficient JNI reflection calls
+- **Added proper error handling** using Zig's `try` syntax
+
+**After abstraction:**
+```zig
+// Object-oriented JNI calls:
+const textView = try jni.createTextView(methods, context);
+try textView.setText("Hello from Zig!");
+textView.setTextSize(24.0);
+
+// Clean logging:
+logger.info("TextView created successfully");
+logger.err("Failed to initialize");
+```
 
 ### Challenge 5: Dynamic UI Creation
 **Problem**: Creating Android UI components entirely from Zig without XML inflation.
@@ -216,6 +236,10 @@ D ZigHelloWorld: onCreate: Complete
 4. **Memory Safety Preserved**: Maintains Zig's memory safety guarantees in Android environment
 
 5. **Proper Android NDK Integration**: Resolved Android-specific libc compatibility through correct API level targeting
+
+6. **JNI Abstraction Layer**: Object-oriented wrapper eliminates verbose JNI syntax and provides method caching
+
+7. **Clean Logging Interface**: Android logging abstraction with multiple levels and formatting support
 
 ## Performance Benefits
 
