@@ -16,16 +16,27 @@ pub const AndroidMethods = struct {
     textview_init: c.jmethodID,
     textview_setText: c.jmethodID,
     textview_setTextSize: c.jmethodID,
+    textview_setLayoutParams: c.jmethodID,
+    textview_setGravity: c.jmethodID,
+    textview_setTextColor: c.jmethodID,
+    layoutparams_class: c.jclass,
+    layoutparams_init: c.jmethodID,
     activity_setContentView: c.jmethodID,
 
     pub fn init(jni: *const JNI, activity: c.jobject) JNIError!AndroidMethods {
         const textview_class = try jni.findClass("android/widget/TextView");
+        const layoutparams_class = try jni.findClass("android/view/ViewGroup$LayoutParams");
 
         return AndroidMethods{
             .textview_class = textview_class,
             .textview_init = try jni.getMethodID(textview_class, "<init>", "(Landroid/content/Context;)V"),
             .textview_setText = try jni.getMethodID(textview_class, "setText", "(Ljava/lang/CharSequence;)V"),
             .textview_setTextSize = try jni.getMethodID(textview_class, "setTextSize", "(F)V"),
+            .textview_setLayoutParams = try jni.getMethodID(textview_class, "setLayoutParams", "(Landroid/view/ViewGroup$LayoutParams;)V"),
+            .textview_setGravity = try jni.getMethodID(textview_class, "setGravity", "(I)V"),
+            .textview_setTextColor = try jni.getMethodID(textview_class, "setTextColor", "(I)V"),
+            .layoutparams_class = layoutparams_class,
+            .layoutparams_init = try jni.getMethodID(layoutparams_class, "<init>", "(II)V"),
             .activity_setContentView = try jni.getMethodIDForObject(activity, "setContentView", "(Landroid/view/View;)V"),
         };
     }
@@ -112,6 +123,19 @@ pub const TextView = struct {
 
     pub fn setTextSize(self: *const TextView, size: f32) void {
         self.jni.callVoidMethod(self.obj, self.methods.textview_setTextSize, .{size});
+    }
+
+    pub fn setLayoutParams(self: *const TextView, width: i32, height: i32) JNIError!void {
+        const layoutParams = try self.jni.newObject(self.methods.layoutparams_class, self.methods.layoutparams_init, .{width, height});
+        self.jni.callVoidMethod(self.obj, self.methods.textview_setLayoutParams, .{layoutParams});
+    }
+
+    pub fn setGravity(self: *const TextView, gravity: i32) void {
+        self.jni.callVoidMethod(self.obj, self.methods.textview_setGravity, .{gravity});
+    }
+
+    pub fn setTextColor(self: *const TextView, color: i32) void {
+        self.jni.callVoidMethod(self.obj, self.methods.textview_setTextColor, .{color});
     }
 };
 

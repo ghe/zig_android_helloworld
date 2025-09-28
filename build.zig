@@ -19,10 +19,10 @@ pub fn build(b: *std.Build) void {
     const android_config = AndroidConfig{
         .sdk_path = b.option([]const u8, "android-sdk", "Android SDK path") orelse getEnvOrDefault(b.allocator, "ANDROID_SDK_ROOT", "/opt/android-sdk"),
         .ndk_path = b.option([]const u8, "android-ndk", "Android NDK path") orelse getEnvOrDefault(b.allocator, "ANDROID_NDK_ROOT", "/opt/android-ndk"),
-        .build_tools_version = b.option([]const u8, "build-tools", "Build tools version") orelse "34.0.0",
-        .api_level = b.option(u8, "api-level", "API level") orelse 11,
-        .min_sdk = b.option(u8, "min-sdk", "Minimum SDK") orelse 24,
-        .target_sdk = b.option(u8, "target-sdk", "Target SDK") orelse 24,
+        .build_tools_version = b.option([]const u8, "build-tools", "Build tools version") orelse "35.0.0",
+        .api_level = b.option(u8, "api-level", "API level") orelse 35,
+        .min_sdk = b.option(u8, "min-sdk", "Minimum SDK") orelse 26,
+        .target_sdk = b.option(u8, "target-sdk", "Target SDK") orelse 35,
     };
 
     // Prerequisite checks
@@ -170,8 +170,9 @@ fn addJavaCompilation(b: *std.Build, config: AndroidConfig) *std.Build.Step.Run 
         "-d", "build/classes",
         "-cp", android_jar,
         "-sourcepath", "android",
-        "-source", "1.8",
-        "-target", "1.8",
+        "-Xlint:-options",
+        "-source", "11",
+        "-target", "11",
         "android/MainActivity.java"
     });
     
@@ -254,8 +255,8 @@ fn addApkPackaging(b: *std.Build, config: AndroidConfig, res_step: *std.Build.St
     copy_dex.step.dependOn(&extract_res.step);
     copy_dex.step.dependOn(&dex_step.step);
     
-    // Package APK
-    const zip_apk = b.addSystemCommand(&.{"sh", "-c", "cd build/apk && zip -r ../helloworld-unsigned.apk ."});
+    // Package APK with uncompressed resources.arsc for Android R+ compatibility
+    const zip_apk = b.addSystemCommand(&.{"sh", "-c", "cd build/apk && zip -r ../helloworld-unsigned.apk . -0 resources.arsc"});
     zip_apk.step.dependOn(&copy_lib.step);
     zip_apk.step.dependOn(&copy_dex.step);
     

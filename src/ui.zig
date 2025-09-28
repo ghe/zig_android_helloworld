@@ -55,11 +55,28 @@ pub fn setContentView(env: *c.JNIEnv, activity: c.jobject, layout: Layout) !void
     l.info(null_term_text);
 
     try textView.setText(layout.text);
+    l.info("TextView text set successfully");
+
     textView.setTextSize(24.0);
+    l.info("TextView text size set to 24.0");
+
+    // Set layout parameters: MATCH_PARENT width, WRAP_CONTENT height
+    try textView.setLayoutParams(-1, -2);
+    l.info("TextView layout parameters set");
+
+    // Center the text (Gravity.CENTER = 17)
+    textView.setGravity(17);
+    l.info("TextView gravity set to center");
+
+    // Set explicit black text color (-16777216 is 0xFF000000 as signed i32)
+    textView.setTextColor(-16777216);
+    l.info("TextView text color set to black");
 
     // Set content view using object-oriented interface
+    l.info("About to call setContentView");
     const activityWrapper = jniWrapper.createActivity(methods, activity);
     activityWrapper.setContentView(&textView);
+    l.info("setContentView called successfully");
 
     l.info("TextView created and set!");
 }
