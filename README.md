@@ -20,14 +20,17 @@ This project showcases how to build a fully functional Android app using Zig for
 
 ### File Structure
 ```
-├── build.zig                  # Complete APK build system
+├── build.zig                  # Complete APK build system with build number generation
 ├── android-libc.conf          # Custom Android NDK libc configuration
+├── build_number.txt           # Persistent build counter (auto-incremented)
 ├── src/
 │   ├── main.zig              # JNI entry point and app initialization
 │   ├── app.zig               # Core application logic
 │   ├── ui.zig                # UI creation and management via JNI
 │   ├── jni.zig               # JNI wrapper abstraction with object-oriented interface
 │   ├── log.zig               # Android logging abstraction
+│   ├── build_info.zig        # Build number tracking and formatting
+│   ├── build_number.zig      # Generated build constants (auto-updated)
 │   └── ui.xml                # Layout definition
 ├── android/
 │   ├── MainActivity.java     # Minimal Java activity (passthrough)
@@ -40,6 +43,8 @@ This project showcases how to build a fully functional Android app using Zig for
 ### 1. Build System (`build.zig`)
 - Complete APK compilation pipeline
 - Android SDK/NDK integration
+- Automatic build number generation and incrementation
+- Build timestamp formatting and source file generation
 - Prerequisites validation
 - Resource compilation (layouts, strings)
 - Java compilation and DEX generation
@@ -49,9 +54,11 @@ This project showcases how to build a fully functional Android app using Zig for
 ### 2. Native Layer (`src/`)
 - **main.zig**: JNI entry point that receives calls from Java
 - **app.zig**: Application initialization and state management
-- **ui.zig**: Dynamic UI creation using Android JNI APIs
+- **ui.zig**: Dynamic UI creation using Android JNI APIs with build info display
 - **jni.zig**: Object-oriented JNI wrapper with method caching and error handling
 - **log.zig**: Clean Android logging abstraction with multiple log levels
+- **build_info.zig**: Build number management with automatic incrementation and formatting
+- **build_number.zig**: Generated build constants (updated automatically during build)
 - **ui.xml**: Layout definitions read by Zig code
 
 ### 3. Java Layer (`android/`)
@@ -225,21 +232,34 @@ D ZigHelloWorld: onCreate: Complete
 - Architecture: ARM64 (aarch64)
 - Build Target: aarch64-linux-android with API 35 libraries
 
-## Key Innovations
+## Build Number System
 
-1. **Complete Zig Build System**: Entire APK compilation pipeline implemented in Zig, eliminating Gradle dependency
+Automatic build tracking with UI display.
 
-2. **Minimal Java Footprint**: Java serves only as entry point, with immediate delegation to Zig
+### Features
+- Auto-increments on each build
+- Persisted in `build_number.txt`
+- Updates `src/build_number.zig` during build
+- Clean format: "build: X - DD Mon YYYY HH:MM"
+- Compile-time tests verify formatting
 
-3. **Native UI Creation**: UI components created directly from Zig using JNI, not XML inflation
+### Usage
+```bash
+zig build  # Increments build number
+zig test src/build_info.zig  # Test formatting
+```
 
-4. **Memory Safety Preserved**: Maintains Zig's memory safety guarantees in Android environment
+App displays: `build: 19 - 15 Oct 2025 01:29`
 
-5. **Proper Android NDK Integration**: Resolved Android-specific libc compatibility through correct API level targeting
+## Key Features
 
-6. **JNI Abstraction Layer**: Object-oriented wrapper eliminates verbose JNI syntax and provides method caching
-
-7. **Clean Logging Interface**: Android logging abstraction with multiple levels and formatting support
+1. **Zig Build System**: Complete APK pipeline without Gradle
+2. **Minimal Java**: Entry point only, delegates to Zig immediately
+3. **JNI Abstraction**: Object-oriented wrapper with method caching
+4. **Android Logging**: Clean interface with multiple levels
+5. **Build Tracking**: Auto-incrementing version display
+6. **Native UI**: Components created via JNI, not XML
+7. **Memory Safety**: Zig guarantees preserved on Android
 
 ## Performance Benefits
 

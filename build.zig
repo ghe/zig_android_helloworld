@@ -11,7 +11,10 @@ const AndroidConfig = struct {
 
 pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
-    
+
+    // Generate build number
+    const build_number_step = generateBuildNumber(b);
+
     // Android configuration
     const android_config = AndroidConfig{
         .sdk_path = b.option([]const u8, "android-sdk", "Android SDK path") orelse getEnvOrDefault(b.allocator, "ANDROID_SDK_ROOT", "/opt/android-sdk"),
@@ -47,6 +50,9 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         }),
     });
+
+    // Make sure build number is generated before library compilation
+    lib.step.dependOn(&build_number_step.step);
 
     // Use custom Android libc configuration
     lib.setLibCFile(.{ .cwd_relative = "android-libc.conf" });
@@ -114,6 +120,8 @@ pub fn build(b: *std.Build) void {
     const lib_step = b.step("lib", "Build native library only");
     lib_step.dependOn(&lib.step);
     
+    // Note: Test can be run manually with `zig test src/build_info.zig`
+
     // Default build target
     b.default_step.dependOn(sign_step);
     
@@ -330,4 +338,42 @@ fn addApkInstall(b: *std.Build, config: AndroidConfig) *std.Build.Step.Run {
 
 fn getHomeDir(allocator: std.mem.Allocator) []const u8 {
     return std.process.getEnvVarOwned(allocator, "HOME") catch "/home/user";
+}
+
+fn generateBuildNumber(b: *std.Build) *std.Build.Step.Run {
+    // Import build_info functions
+    const build_info = @import("src/build_info.zig");
+
+    const build_number = build_info.readBuildNumber(b.allocator) catch 1;
+    const new_build_number = build_number + 1;
+
+    // Write the new build number back to file
+    build_info.writeBuildNumber(b.allocator, new_build_number) catch {};
+
+    // Get current timestamp and format it
+    const timestamp = std.time.timestamp();
+    const formatted_date = build_info.formatTimestamp(b.allocator, timestamp);
+
+    // Create the build_number.zig file content directly in source directory
+    const build_content = b.fmt(
+        \\pub const build_number: u32 = {d};
+        \\pub const build_date: []const u8 = "{s}";
+        \\pub const build_timestamp: i64 = {d};
+        \\
+    , .{ new_build_number, formatted_date, timestamp });
+
+    // Write directly to src/build_number.zig using Zig's file system
+    const cwd = std.fs.cwd();
+    const file = cwd.createFile("src/build_number.zig", .{}) catch |err| {
+        std.debug.print("Failed to create build_number.zig: {}\n", .{err});
+        return b.addSystemCommand(&.{"echo", "Build number generation failed"});
+    };
+    defer file.close();
+
+    file.writeAll(build_content) catch |err| {
+        std.debug.print("Failed to write to build_number.zig: {}\n", .{err});
+    };
+
+    // Return a no-op command since we've already written the file
+    return b.addSystemCommand(&.{"echo", "Build number generated"});
 }
